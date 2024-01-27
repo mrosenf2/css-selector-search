@@ -1,0 +1,93 @@
+{
+  "name": "css-selector-search",
+  "displayName": "css-selector-search",
+  "description": "Search through HTML files in the workspace using CSS selectors",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cssSelectorSearch.performSearch",
+        "title": "CSS Selector Search"
+      },
+      {
+        "command": "cssSelectorSearch.refreshSearch",
+        "title": "CSS Selector Search - Refresh",
+        "icon": "media/search.svg"
+      },
+      {
+        "command": "cssSelectorSearch.toggleView",
+        "title": "CSS Selector Toggle View"
+      }
+    ],
+    "viewsWelcome": [
+      {
+        "view": "cssSelectorSearchResults",
+        "contents": "[Search Using CSS Selector](command:cssSelectorSearch.performSearch)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cssSelectorSearch",
+          "title": "CSS Selector Search",
+          "icon": "media/search.svg"
+        }
+      ]
+    },
+    "views": {
+      "cssSelectorSearch": [
+        {
+          "id": "cssSelectorSearchResults",
+          "name": "Search Results",
+          "contextualTitle": "CSS Selector Search Results"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "cssSelectorSearch.refreshSearch",
+          "when": "view == cssSelectorSearchResults",
+          "group": "navigation"
+        },
+        {
+          "command": "cssSelectorSearch.toggleView",
+          "when": "view == cssSelectorSearchResults"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.3",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.84.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/test-electron": "^2.3.6",
+    "eslint": "^8.52.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.2.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12"
+  }
+}
