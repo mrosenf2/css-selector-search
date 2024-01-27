@@ -5,14 +5,15 @@ import { getAllFiles, searchFile } from "./util";
 import { SearchResult, VFSTreeNode, countResults, foldTree, insert } from "./VFSTreeNode";
 import { ThemeIcon, TreeItem, TreeItemCollapsibleState } from "vscode";
 
+type TreeViewItem = TI_SearchResultFile | TI_SearchResult;
 export class CssSelectorSearchProvider
-    implements vscode.TreeDataProvider<TI_SearchResultFile | TI_SearchResult>
+    implements vscode.TreeDataProvider<TreeViewItem>
 {
     constructor(private workspaceRoot: string, private searchQuery: string) {
         console.log(workspaceRoot);
     }
 
-    getTreeItem(element: TI_SearchResultFile | TI_SearchResult): TreeItem {
+    getTreeItem(element: TreeViewItem): TreeItem {
         return element;
     }
 
@@ -25,7 +26,7 @@ export class CssSelectorSearchProvider
 
     getChildren(
         element?: TI_SearchResultFile
-    ): vscode.ProviderResult<TI_SearchResultFile[] | TI_SearchResult[]> {
+    ): vscode.ProviderResult<TreeViewItem[]> {
         if (!this.workspaceRoot) {
             vscode.window.showInformationMessage("No Workspace");
             return [];
@@ -48,10 +49,25 @@ export class CssSelectorSearchProvider
                     insert(rootNode, file, searchResults);
                 }
             }
+
             foldTree(rootNode);
-            return rootNode.children.map((r) => new TI_SearchResultFile(r));
+            if (!rootNode.children?.length) { return [new TI_SearchResultFile(undefined, rootNode)]; }
+            return rootNode.children.map((r) => new TI_SearchResultFile(undefined, r));
         } else {
             return element.getChildren();
+        }
+    }
+
+    private _onDidChangeTreeData: vscode.EventEmitter<TreeViewItem | undefined | null | void> = new vscode.EventEmitter<TreeViewItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<TreeViewItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
+    removeTreeeItem(item: TreeViewItem) {
+        if (item.parent) {
+            item.parent.removeChild(item);
+            this._onDidChangeTreeData.fire(item.parent);
+        }
+        else {
+            this._onDidChangeTreeData.fire();
         }
     }
 
@@ -69,10 +85,11 @@ export class CssSelectorSearchProvider
  * Tree Item representing a folder or file containing search results
  */
 class TI_SearchResultFile extends TreeItem {
-    constructor(public readonly treeNode: VFSTreeNode) {
+    constructor(public readonly parent: TI_SearchResultFile | undefined, public readonly treeNode: VFSTreeNode) {
         super(vscode.Uri.file(treeNode.relativePath), TreeItemCollapsibleState.Collapsed);
         this.tooltip = this.resourceUri?.path;
-        // this.iconPath = ThemeIcon.File;
+        this.iconPath = ThemeIcon.File;
+        this.id = getUniqueId();
         let resultsSummary = countResults(treeNode);
         if (resultsSummary.files) {
             this.description = `${resultsSummary.files} files | ${resultsSummary.results} results`;
@@ -82,26 +99,42 @@ class TI_SearchResultFile extends TreeItem {
     }
 
     getChildren() {
+        if (this.children) {return this.children;}
         if (this.treeNode.data) {
-            return this.treeNode.data.map((result) => {
-                return new TI_SearchResult(result.filePath, result.range);
+            this.children = this.treeNode.data.map((result) => {
+                return new TI_SearchResult(this, result.filePath, result.range);
             });
         } else {
-            return this.treeNode.children.map((result) => {
-                return new TI_SearchResultFile(result);
+            this.children = this.treeNode.children.map((result) => {
+                return new TI_SearchResultFile(this, result);
             });
         }
+        return this.children;
     }
+
+    private children: TreeViewItem[] | undefined = undefined;
+
+    removeChild(item: TreeViewItem) {
+        console.log(`removing ${item.id}`);
+        this.children = this.children?.filter(x => x.id !== item.id);
+    }
+}
+
+
+let id = 0;
+export function getUniqueId(): string {
+  return id++ + '';
 }
 
 /**
  * Tree Item representing a specific search results
  */
 class TI_SearchResult extends TreeItem {
-    constructor(public readonly filepath: string, public readonly range: vscode.Range) {
+    constructor(public readonly parent: TI_SearchResultFile, public readonly filepath: string, public readonly range: vscode.Range) {
         super(vscode.Uri.file(filepath), TreeItemCollapsibleState.None);
         this.tooltip = this.resourceUri?.path;
         this.iconPath = vscode.ThemeIcon.File;
+        this.id = getUniqueId();
 
         var opts: vscode.TextDocumentShowOptions = {
             selection: range,

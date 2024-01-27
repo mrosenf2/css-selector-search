@@ -21,8 +21,8 @@ export type VFSTreeNode = {
 export function insert(root: VFSTreeNode, relativePath: string, results: SearchResult[]) {
     const arrRelativePath = relativePath.split("\\");
     const dirName = path.dirname(relativePath);
-    const itemName = relativePath[0];
-    const newPath = relativePath.slice(1);
+    const itemName = arrRelativePath[0];
+    const newPath = arrRelativePath.slice(1).join("\\");
 
     const child = root.children.find((c) => {
         return c.name === itemName;
@@ -33,16 +33,16 @@ export function insert(root: VFSTreeNode, relativePath: string, results: SearchR
     }
 
     const newNode: VFSTreeNode = {
-        name: relativePath[0],
-        relativePath: path.join(root.relativePath, relativePath[0]),
+        name: arrRelativePath[0],
+        relativePath: path.join(root.relativePath, arrRelativePath[0]),
         children: [],
     };
 
-    if (relativePath.length !== 1 && !results) {
+    if (arrRelativePath.length !== 1 && !results) {
         throw new Error("unexpected");
     }
 
-    if (relativePath.length === 1) {
+    if (arrRelativePath.length === 1) {
         newNode.data = results;
         root.children.push(newNode);
         return newNode;

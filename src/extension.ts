@@ -12,10 +12,10 @@ export function activate(context: vscode.ExtensionContext) {
             : undefined;
 
     if (rootPath) {
-        const commands: { [key: string]: (...args: any[]) => any } = {
+        const commands: { [key: string]: (...args: any[]) => any; } = {
             performSearch: performSearch.bind(null, rootPath),
             refreshSearch: refreshSearch,
-            toggleView: toggleView,
+            toggleView: toggleView
         };
 
         for (const key in commands) {
@@ -34,12 +34,18 @@ async function performSearch(rootPath: string) {
         prompt: "search",
     });
     if (searchQuery) {
+        const provider = new CssSelectorSearchProvider(rootPath, searchQuery);
         const treeView = vscode.window.createTreeView("cssSelectorSearchResults", {
-            treeDataProvider: new CssSelectorSearchProvider(rootPath, searchQuery),
+            treeDataProvider: provider,
             showCollapseAll: true,
+        });
+        vscode.commands.registerCommand(`cssSelectorSearch.removeResult`, (item) => {
+            provider.removeTreeeItem(item);
         });
     }
 }
+
+
 
 function toggleView() {
     throw new Error("not implemented");
@@ -49,4 +55,4 @@ function refreshSearch() {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }
