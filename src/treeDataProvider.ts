@@ -9,9 +9,42 @@ type TreeViewItem = TI_SearchResultFile | TI_SearchResult;
 export class CssSelectorSearchProvider
     implements vscode.TreeDataProvider<TreeViewItem>
 {
-    constructor(private workspaceRoot: string, private searchQuery: string) {
-        console.log(workspaceRoot);
+    constructor() {
     }
+
+    /**
+     * Assign current root path to tree data provider
+     * @param root RootPath currently opened
+     */
+    activate(root: string) {
+        this.workspaceRoot = root;
+    }
+
+    performSearch(searchQuery?: string) {
+        this.searchQuery = searchQuery || this.searchQuery;
+        this._onDidChangeTreeData.fire();
+    }
+
+    // beginPerformSearch() {
+    //     // scan directory for search results
+    //     const files = getAllFiles(this.workspaceRoot).filter((f) => f.endsWith("html"));
+    //     for (const file of files) {
+    //         var result = searchFile(file, this.searchQuery);
+    //         let searchResults = result.map((r) => ({
+    //             filePath: file,
+    //             range: r,
+    //         }));
+    //         // when found, fire treeview update
+    //         if (result && result.length) {
+    //             insert(rootNode, file, searchResults);
+    //         }
+    //     }
+
+        
+    // }
+
+    private workspaceRoot: string = "";
+    private searchQuery: string = "";
 
     getTreeItem(element: TreeViewItem): TreeItem {
         return element;
@@ -24,12 +57,17 @@ export class CssSelectorSearchProvider
         }
     }
 
+    rootSearchResults: TI_SearchResultFile[] = [];
+
     getChildren(
         element?: TI_SearchResultFile
     ): vscode.ProviderResult<TreeViewItem[]> {
         if (!this.workspaceRoot) {
             vscode.window.showInformationMessage("No Workspace");
             return [];
+        }
+        if (!this.searchQuery) {
+            return undefined;
         }
         let results: SearchResult[] = [];
         if (!element) {
@@ -99,7 +137,7 @@ class TI_SearchResultFile extends TreeItem {
     }
 
     getChildren() {
-        if (this.children) {return this.children;}
+        if (this.children) { return this.children; }
         if (this.treeNode.data) {
             this.children = this.treeNode.data.map((result) => {
                 return new TI_SearchResult(this, result.filePath, result.range);
@@ -123,7 +161,7 @@ class TI_SearchResultFile extends TreeItem {
 
 let id = 0;
 export function getUniqueId(): string {
-  return id++ + '';
+    return id++ + '';
 }
 
 /**

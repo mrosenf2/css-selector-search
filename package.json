@@ -22,7 +22,7 @@
       {
         "command": "cssSelectorSearch.refreshSearch",
         "title": "CSS Selector Search - Refresh",
-        "icon": "media/search.svg"
+        "icon": "$(search)"
       },
       {
         "command": "cssSelectorSearch.toggleView",
@@ -45,7 +45,7 @@
         {
           "id": "cssSelectorSearch",
           "title": "CSS Selector Search",
-          "icon": "media/search.svg"
+          "icon": "$(search)"
         }
       ]
     },
@@ -100,6 +100,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "cheerio": "^1.0.0-rc.12"
+    "cheerio": "^1.0.0-rc.12",
+    "rxjs": "^7.8.1"
   }
 }

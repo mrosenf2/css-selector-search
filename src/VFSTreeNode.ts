@@ -3,6 +3,9 @@
 import * as vscode from "vscode";
 import * as path from "path";
 
+/**
+ * Object holding a single search result
+ */
 export interface SearchResult {
     range: vscode.Range;
     filePath: string;

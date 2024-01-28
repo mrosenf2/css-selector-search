@@ -2,20 +2,35 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { CssSelectorSearchProvider } from "./treeDataProvider";
+import { getRootPath } from "./util";
+
+/**
+ * static instance of vscode.TreeDataProvider to display search results, instantiated once during activation
+ */
+const provider = new CssSelectorSearchProvider();
+
+
+
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-    const rootPath =
-        vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
-            ? vscode.workspace.workspaceFolders[0].uri.fsPath
-            : undefined;
 
+    const rootPath = getRootPath();
     if (rootPath) {
+
+        provider.activate(rootPath);
+
+        vscode.window.createTreeView("cssSelectorSearchResults", {
+            treeDataProvider: provider,
+            showCollapseAll: true,
+        });
+
         const commands: { [key: string]: (...args: any[]) => any; } = {
-            performSearch: performSearch.bind(null, rootPath),
+            performSearch: performSearch,
             refreshSearch: refreshSearch,
-            toggleView: toggleView
+            toggleView: toggleView,
+            removeResult: removeResult
         };
 
         for (const key in commands) {
@@ -24,34 +39,28 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.commands.registerCommand(`cssSelectorSearch.${key}`, command)
             );
         }
-
-        // treeView.reveal()
     }
 }
 
-async function performSearch(rootPath: string) {
+async function performSearch() {
     var searchQuery = await vscode.window.showInputBox({
         prompt: "search",
     });
     if (searchQuery) {
-        const provider = new CssSelectorSearchProvider(rootPath, searchQuery);
-        const treeView = vscode.window.createTreeView("cssSelectorSearchResults", {
-            treeDataProvider: provider,
-            showCollapseAll: true,
-        });
-        vscode.commands.registerCommand(`cssSelectorSearch.removeResult`, (item) => {
-            provider.removeTreeeItem(item);
-        });
+        provider.performSearch(searchQuery);
     }
 }
 
+function removeResult(item: any) {
+    provider.removeTreeeItem(item);
+}
 
 
 function toggleView() {
     throw new Error("not implemented");
 }
 function refreshSearch() {
-    throw new Error("not implemented");
+    provider.performSearch();
 }
 
 // This method is called when your extension is deactivated
