@@ -34,10 +34,8 @@ export function activate(context: vscode.ExtensionContext) {
         };
 
         for (const key in commands) {
-            const command = commands[key];
-            context.subscriptions.push(
-                vscode.commands.registerCommand(`cssSelectorSearch.${key}`, command)
-            );
+            const disposable = vscode.commands.registerCommand(`cssSelectorSearch.${key}`, commands[key]);
+            context.subscriptions.push(disposable);
         }
     }
 }
